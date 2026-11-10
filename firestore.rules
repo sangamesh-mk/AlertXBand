@@ -1,0 +1,114 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // USER PROFILES
+    match /users/{userId} {
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasAll([
+          'uid',
+          'fullName',
+          'email',
+          'phoneNumber',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'fullName',
+          'email',
+          'phoneNumber',
+          'createdAt'
+        ])
+        && request.resource.data.uid == userId
+        && request.resource.data.fullName is string
+        && request.resource.data.email is string
+        && request.resource.data.phoneNumber is string
+        && request.resource.data.createdAt is timestamp;
+
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            'fullName',
+            'phoneNumber',
+            'updatedAt'
+          ]);
+
+      allow delete: if false;
+
+      // EMERGENCY CONTACTS
+      match /emergencyContacts/{contactId} {
+
+        function validContact() {
+          return request.resource.data.keys().hasAll([
+            'name',
+            'phone_number',
+            'relationship',
+            'is_primary',
+            'created_at',
+            'updated_at'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'name',
+            'phone_number',
+            'relationship',
+            'is_primary',
+            'created_at',
+            'updated_at'
+          ])
+          && request.resource.data.name is string
+          && request.resource.data.phone_number is string
+          && request.resource.data.relationship is string
+          && request.resource.data.is_primary is bool
+          && request.resource.data.created_at is timestamp
+          && request.resource.data.updated_at is timestamp;
+        }
+
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+          && validContact();
+
+        allow update: if isOwner(userId)
+          && validContact()
+          && request.resource.data.created_at
+            == resource.data.created_at;
+
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // DEVICE OWNERSHIP
+    match /devices/{deviceId} {
+      allow read, write: if false;
+
+      match /authorizedUsers/{memberUid} {
+        allow read, write: if false;
+      }
+    }
+
+    // ACTIVATION SECRETS
+    match /deviceSecrets/{deviceId} {
+      allow read, write: if false;
+    }
+
+    // DEFAULT DENY
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

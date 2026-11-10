@@ -36,7 +36,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
 
-      // App bar for secondary screens.
       appBar: _selectedIndex == 0
           ? null
           : AppBar(
@@ -61,18 +60,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // 0: Home
           HomeDashboardScreen(onViewAll: _openMonitoring),
 
-          // 1: Monitoring
+          // 1: Monitoring Centre
           const MonitoringCentreScreen(),
 
-          // 2: Location
+          // 2: GPS Tracking
           const GpsTrackingScreen(),
 
           // 3: Emergency Alerts
           const EmergencyAlertsScreen(),
 
-          const SettingsScreen(),
-
-          // 4: Profile / Settings
+          // 4: Settings and Profile
           const SettingsScreen(),
         ],
       ),

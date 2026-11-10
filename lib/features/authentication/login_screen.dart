@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,36 +13,19 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _rememberMe = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  // Demo login: authentication will be connected with Firebase later.
-  void _login() {
-    if (!_formKey.currentState!.validate()) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Demo authentication is not connected yet. '
-          'Please use Continue as Guest.',
-        ),
-      ),
-    );
-  }
-
-  // Guest access for frontend development.
-  void _continueAsGuest() {
-    context.go('/dashboard');
   }
 
   InputDecoration _inputDecoration({
@@ -73,6 +57,124 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Authenticate using Firebase Authentication only.
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (credential.user == null) {
+        throw Exception('Authentication failed. Please try again.');
+      }
+
+      if (!mounted) return;
+
+      _showMessage('Login successful!');
+
+      // Navigate directly to dashboard.
+      context.go('/dashboard');
+    } on FirebaseAuthException catch (e) {
+      debugPrint('AUTH ERROR: ${e.code} - ${e.message}');
+
+      if (!mounted) return;
+
+      _showMessage(_authErrorMessage(e.code));
+    } catch (e, stackTrace) {
+      debugPrint('LOGIN ERROR: $e');
+      debugPrint('STACK TRACE: $stackTrace');
+
+      if (!mounted) return;
+
+      _showMessage(
+        'Unable to log in. Please check your connection and try again.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _authErrorMessage(String code) {
+    switch (code) {
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'user-not-found':
+      case 'invalid-credential':
+      case 'wrong-password':
+        return 'Incorrect email or password.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'Network error. Check your internet connection.';
+      case 'operation-not-allowed':
+        return 'Email and Password sign-in is not enabled.';
+      default:
+        return 'Login failed. Please try again.';
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty ||
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      _showMessage('Enter your valid email address first.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+      if (!mounted) return;
+
+      _showMessage('Password reset email sent. Check your inbox.');
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      switch (e.code) {
+        case 'user-not-found':
+          _showMessage('No account found with this email address.');
+          break;
+        case 'invalid-email':
+          _showMessage('Please enter a valid email address.');
+          break;
+        case 'network-request-failed':
+          _showMessage('Network error. Check your internet connection.');
+          break;
+        case 'too-many-requests':
+          _showMessage('Too many attempts. Please try again later.');
+          break;
+        default:
+          _showMessage('Unable to send reset email. Please try again.');
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage('Unable to send reset email. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // App logo
+                  // APP LOGO
                   Center(
                     child: Container(
                       height: 76,
@@ -133,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 38),
 
-                  // Email
+                  // EMAIL
                   const Text(
                     'Email Address',
                     style: TextStyle(
@@ -146,6 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   TextFormField(
                     controller: _emailController,
+                    enabled: !_isLoading,
                     keyboardType: TextInputType.emailAddress,
                     decoration: _inputDecoration(
                       label: 'Email',
@@ -169,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 23),
 
-                  // Password
+                  // PASSWORD
                   const Text(
                     'Password',
                     style: TextStyle(
@@ -182,17 +285,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   TextFormField(
                     controller: _passwordController,
+                    enabled: !_isLoading,
                     obscureText: _obscurePassword,
                     decoration: _inputDecoration(
                       label: 'Password',
                       hint: 'Enter your password',
                       icon: Icons.lock_outline_rounded,
                       suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        onPressed: _isLoading
+                            ? null
+                            : () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                         icon: Icon(
                           _obscurePassword
                               ? Icons.visibility_off_outlined
@@ -213,9 +319,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 23),
 
-                  // Remember me and forgot password
+                  // REMEMBER ME AND FORGOT PASSWORD
                   Row(
                     children: [
                       SizedBox(
@@ -223,11 +329,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Checkbox(
                           value: _rememberMe,
                           activeColor: AppColors.primary,
-                          onChanged: (value) {
-                            setState(() {
-                              _rememberMe = value ?? false;
-                            });
-                          },
+                          onChanged: _isLoading
+                              ? null
+                              : (value) {
+                                  setState(() {
+                                    _rememberMe = value ?? false;
+                                  });
+                                },
                         ),
                       ),
 
@@ -242,16 +350,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Spacer(),
 
                       TextButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Password recovery will be available '
-                                'after Firebase integration.',
-                              ),
-                            ),
-                          );
-                        },
+                        onPressed: _isLoading ? null : _forgotPassword,
                         child: const Text(
                           'Forgot Password?',
                           style: TextStyle(
@@ -266,12 +365,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 22),
 
-                  // Login button
+                  // LOGIN BUTTON
                   SizedBox(
                     height: 55,
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _login,
+                      onPressed: _isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -280,66 +379,28 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 17),
-
-                  // Divider
-                  const Row(
-                    children: [
-                      Expanded(child: Divider()),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 14),
-                        child: Text(
-                          'OR',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Expanded(child: Divider()),
-                    ],
-                  ),
-
-                  const SizedBox(height: 17),
-
-                  // Continue as Guest
-                  SizedBox(
-                    height: 55,
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _continueAsGuest,
-                      icon: const Icon(Icons.person_outline_rounded, size: 21),
-                      label: const Text(
-                        'Continue as Guest',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.primary),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Login',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
 
                   const SizedBox(height: 28),
 
-                  // Signup navigation
+                  // SIGNUP NAVIGATION
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -350,8 +411,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontSize: 13,
                         ),
                       ),
+
                       GestureDetector(
-                        onTap: () => context.push('/register'),
+                        onTap: _isLoading
+                            ? null
+                            : () => context.push('/register'),
                         child: const Text(
                           'Sign Up',
                           style: TextStyle(

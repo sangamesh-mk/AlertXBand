@@ -363,6 +363,19 @@ class AlertService extends ChangeNotifier {
     notifyListeners();
   }
 
+  void simulateTemperatureAlert() {
+    _addAlert(
+      title: 'High Temperature Warning',
+      description:
+          'A simulated temperature reading exceeded the configured '
+          'software testing threshold. This is not a real measurement.',
+      category: 'Temperature',
+      severity: AlertSeverity.warning,
+    );
+
+    notifyListeners();
+  }
+
   void resolveAllAlerts() {
     for (final alert in _alerts) {
       alert.isResolved = true;

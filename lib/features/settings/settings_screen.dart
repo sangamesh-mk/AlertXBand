@@ -28,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 25),
 
+            // ACCOUNT
             _sectionTitle('Account'),
 
             _settingsTile(
@@ -38,16 +39,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
 
             _settingsTile(
+              icon: Icons.security_rounded,
+              title: 'Account & Security',
+              subtitle: 'Password, login and account security',
+              onTap: () => context.push('/account-security'),
+            ),
+
+            _settingsTile(
               icon: Icons.emergency_outlined,
               title: 'Emergency Contacts',
               subtitle: 'Manage your emergency contacts',
-              onTap: () {
-                context.push('/emergency-contacts');
-              },
+              onTap: () => context.push('/emergency-contacts'),
             ),
 
             const SizedBox(height: 20),
 
+            // SAFETY PREFERENCES
             _sectionTitle('Safety Preferences'),
 
             _switchTile(
@@ -56,9 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Receive application notifications',
               value: _notificationsEnabled,
               onChanged: (value) {
-                setState(() {
-                  _notificationsEnabled = value;
-                });
+                setState(() => _notificationsEnabled = value);
               },
             ),
 
@@ -68,9 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Enable fall-related alert preferences',
               value: _fallAlertsEnabled,
               onChanged: (value) {
-                setState(() {
-                  _fallAlertsEnabled = value;
-                });
+                setState(() => _fallAlertsEnabled = value);
               },
             ),
 
@@ -80,9 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Enable health-related alert preferences',
               value: _healthAlertsEnabled,
               onChanged: (value) {
-                setState(() {
-                  _healthAlertsEnabled = value;
-                });
+                setState(() => _healthAlertsEnabled = value);
               },
             ),
 
@@ -92,23 +93,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Location preference for the application',
               value: _locationEnabled,
               onChanged: (value) {
-                setState(() {
-                  _locationEnabled = value;
-                });
+                setState(() => _locationEnabled = value);
               },
             ),
 
             const SizedBox(height: 20),
 
+            // DEVICE & APPLICATION
             _sectionTitle('Device & Application'),
 
             _settingsTile(
               icon: Icons.watch_outlined,
               title: 'My Wearable Device',
               subtitle: 'Device information and connection',
-              onTap: () {
-                context.push('/device-monitoring');
-              },
+              onTap: () => context.push('/device-monitoring'),
+            ),
+
+            _settingsTile(
+              icon: Icons.privacy_tip_outlined,
+              title: 'Privacy Policy',
+              subtitle: 'How AlertXBand handles your information',
+              onTap: () => context.push('/privacy-policy'),
             ),
 
             _settingsTile(
@@ -118,6 +123,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: _showAboutDialog,
             ),
 
+            const SizedBox(height: 20),
+
+            // CONTACT US
+            _sectionTitle('Contact Us'),
+
             _settingsTile(
               icon: Icons.help_outline_rounded,
               title: 'Help & Support',
@@ -125,9 +135,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () => context.push('/help-support'),
             ),
 
+            _settingsTile(
+              icon: Icons.description_outlined,
+              title: 'Terms & Conditions',
+              subtitle: 'Rules and conditions for using AlertXBand',
+              onTap: () => context.push('/terms-conditions'),
+            ),
+
+            _settingsTile(
+              icon: Icons.admin_panel_settings_outlined,
+              title: 'App Permissions',
+              subtitle: 'Manage location, notifications and device access',
+              onTap: () => context.push('/app-permissions'),
+            ),
+
+            _settingsTile(
+              icon: Icons.report_problem_outlined,
+              title: 'Report a Problem',
+              subtitle: 'Report bugs or technical issues',
+              onTap: () => context.push('/report-problem'),
+            ),
+
             const SizedBox(height: 25),
 
-            // Demo mode indicator
+            // DEMO MODE
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
@@ -173,7 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 22),
 
-            // Logout / exit guest mode
+            // EXIT GUEST MODE
             OutlinedButton.icon(
               onPressed: _confirmExitGuestMode,
               icon: const Icon(Icons.logout_rounded),
@@ -238,9 +269,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               size: 34,
             ),
           ),
-
           const SizedBox(width: 15),
-
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,7 +295,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-
           const Icon(
             Icons.verified_user_outlined,
             color: Colors.white70,

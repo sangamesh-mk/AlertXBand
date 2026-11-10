@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _acceptedTerms = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -62,21 +65,120 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  void _register() {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptedTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the Terms and Conditions.'),
-        ),
-      );
+      _showMessage('Please accept the Terms and Conditions.');
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Account registration is not connected yet.'),
+    setState(() => _isLoading = true);
+
+    User? createdUser;
+
+    try {
+      // 1. Create Firebase Authentication account.
+      final credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
+
+      final user = credential.user;
+
+      if (user == null) {
+        throw Exception('Account creation failed.');
+      }
+
+      createdUser = user;
+
+      // 2. Save the user's display name.
+      await user.updateDisplayName(_nameController.text.trim());
+
+      // 3. Create the Firestore user profile.
+      // This matches the currently published Firestore rules.
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'uid': user.uid,
+        'fullName': _nameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'phoneNumber': _phoneController.text.trim(),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      _showMessage('Account created successfully!');
+
+      // 4. Navigate to dashboard.
+      context.go('/dashboard');
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      _showMessage(_authErrorMessage(e.code));
+    } on FirebaseException catch (e) {
+      // If profile creation fails, sign out the newly created user.
+      if (createdUser != null) {
+        await FirebaseAuth.instance.signOut();
+      }
+
+      if (!mounted) return;
+
+      _showMessage(
+        'Unable to save your account profile. '
+        'Please try again. (${e.code})',
+      );
+    } catch (e) {
+      if (createdUser != null) {
+        await FirebaseAuth.instance.signOut();
+      }
+
+      if (!mounted) return;
+
+      _showMessage(
+        'Unable to complete registration. '
+        'Please check your connection and try again.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _authErrorMessage(String code) {
+    switch (code) {
+      case 'email-already-in-use':
+        return 'An account already exists with this email address.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'weak-password':
+        return 'Please choose a stronger password.';
+      case 'operation-not-allowed':
+        return 'Email and Password authentication is not enabled.';
+      case 'network-request-failed':
+        return 'Network error. Please check your internet connection.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      default:
+        return 'Registration failed. Please try again.';
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Widget _fieldLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
       ),
     );
   }
@@ -89,7 +191,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: _isLoading ? null : () => context.pop(),
           icon: const Icon(
             Icons.arrow_back_rounded,
             color: AppColors.textPrimary,
@@ -150,9 +252,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 30),
 
+                // FULL NAME
                 _fieldLabel('Full Name'),
                 TextFormField(
                   controller: _nameController,
+                  enabled: !_isLoading,
                   textCapitalization: TextCapitalization.words,
                   decoration: _inputDecoration(
                     label: 'Full Name',
@@ -172,9 +276,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 19),
 
+                // EMAIL
                 _fieldLabel('Email Address'),
                 TextFormField(
                   controller: _emailController,
+                  enabled: !_isLoading,
                   keyboardType: TextInputType.emailAddress,
                   decoration: _inputDecoration(
                     label: 'Email',
@@ -196,9 +302,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 19),
 
+                // PHONE NUMBER
                 _fieldLabel('Phone Number'),
                 TextFormField(
                   controller: _phoneController,
+                  enabled: !_isLoading,
                   keyboardType: TextInputType.phone,
                   decoration: _inputDecoration(
                     label: 'Phone Number',
@@ -220,20 +328,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 19),
 
+                // PASSWORD
                 _fieldLabel('Password'),
                 TextFormField(
                   controller: _passwordController,
+                  enabled: !_isLoading,
                   obscureText: _obscurePassword,
                   decoration: _inputDecoration(
                     label: 'Password',
                     hint: 'Create a password',
                     icon: Icons.lock_outline_rounded,
                     suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_off_outlined
@@ -254,20 +366,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 19),
 
+                // CONFIRM PASSWORD
                 _fieldLabel('Confirm Password'),
                 TextFormField(
                   controller: _confirmPasswordController,
+                  enabled: !_isLoading,
                   obscureText: _obscureConfirmPassword,
                   decoration: _inputDecoration(
                     label: 'Confirm Password',
                     hint: 'Re-enter your password',
                     icon: Icons.lock_reset_rounded,
                     suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _obscureConfirmPassword = !_obscureConfirmPassword;
-                        });
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              setState(() {
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
+                              });
+                            },
                       icon: Icon(
                         _obscureConfirmPassword
                             ? Icons.visibility_off_outlined
@@ -288,17 +405,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 17),
 
+                // TERMS AND CONDITIONS
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Checkbox(
                       value: _acceptedTerms,
                       activeColor: AppColors.primary,
-                      onChanged: (value) {
-                        setState(() {
-                          _acceptedTerms = value ?? false;
-                        });
-                      },
+                      onChanged: _isLoading
+                          ? null
+                          : (value) {
+                              setState(() {
+                                _acceptedTerms = value ?? false;
+                              });
+                            },
                     ),
                     const Expanded(
                       child: Padding(
@@ -318,31 +438,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 19),
 
+                // CREATE ACCOUNT
                 SizedBox(
                   height: 55,
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _register,
+                    onPressed: _isLoading ? null : _register,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.primary.withValues(
+                        alpha: 0.6,
+                      ),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
-                    child: const Text(
-                      'Create Account',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Create Account',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
 
                 const SizedBox(height: 25),
 
+                // LOGIN NAVIGATION
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -354,7 +488,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => context.go('/login'),
+                      onTap: _isLoading ? null : () => context.go('/login'),
                       child: const Text(
                         'Login',
                         style: TextStyle(
@@ -369,19 +503,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _fieldLabel(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 9),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
         ),
       ),
     );

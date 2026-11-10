@@ -1,26 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../services/device_service.dart';
+import '../../services/sensor_simulator_service.dart';
 
-class DeviceMonitoringScreen extends StatelessWidget {
+class DeviceMonitoringScreen extends ConsumerWidget {
   const DeviceMonitoringScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final device = DeviceService.instance;
+    final mode = ref.watch(sensorDataModeProvider);
+
     return AnimatedBuilder(
-      animation: DeviceService.instance,
+      animation: device,
       builder: (context, child) {
-        final device = DeviceService.instance;
+        final simulationMode = mode == SensorDataMode.simulator;
 
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: AppBar(
             title: const Text('Device Control Centre'),
-            centerTitle: false,
             actions: [
               IconButton(
-                tooltip: 'Refresh demo status',
+                tooltip: 'Refresh device status',
                 onPressed: device.refreshStatus,
                 icon: const Icon(Icons.refresh),
               ),
@@ -31,19 +35,23 @@ class DeviceMonitoringScreen extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _demoBanner(),
+                _modeSelector(context, ref, simulationMode),
 
                 const SizedBox(height: 16),
 
-                _deviceCard(device),
+                _modeBanner(simulationMode),
 
                 const SizedBox(height: 16),
+
+                _deviceCard(device, simulationMode),
+
+                const SizedBox(height: 20),
 
                 _sectionTitle('Device overview'),
 
                 const SizedBox(height: 10),
 
-                _overviewGrid(device),
+                _overviewGrid(device, simulationMode),
 
                 const SizedBox(height: 22),
 
@@ -62,14 +70,34 @@ class DeviceMonitoringScreen extends StatelessWidget {
                   icon: Icons.location_on_outlined,
                   title: 'GPS Module',
                   subtitle: device.gpsStatus,
-                  available: device.isConnected,
+                  available:
+                      device.isConnected &&
+                      (simulationMode ||
+                          device.gpsStatus.contains('Available')),
+                ),
+
+                _moduleCard(
+                  icon: Icons.wifi,
+                  title: 'Wi-Fi Communication',
+                  subtitle: simulationMode
+                      ? 'Simulation only'
+                      : device.connectionType == 'wifi'
+                      ? 'Connected through Wi-Fi'
+                      : 'Not currently active',
+                  available:
+                      !simulationMode &&
+                      device.isConnected &&
+                      device.connectionType == 'wifi',
                 ),
 
                 _moduleCard(
                   icon: Icons.cell_tower,
                   title: 'GSM / SIM800L',
                   subtitle: device.gsmStatus,
-                  available: false,
+                  available:
+                      !simulationMode &&
+                      device.isConnected &&
+                      device.connectionType == 'gsm',
                 ),
 
                 _moduleCard(
@@ -86,7 +114,7 @@ class DeviceMonitoringScreen extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                _controlPanel(device),
+                _controlPanel(device, simulationMode),
 
                 const SizedBox(height: 22),
 
@@ -94,11 +122,11 @@ class DeviceMonitoringScreen extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                _diagnosticsCard(context, device),
+                _diagnosticsCard(context, device, simulationMode),
 
                 const SizedBox(height: 16),
 
-                _lastUpdatedCard(device),
+                _lastUpdatedCard(device, simulationMode),
 
                 const SizedBox(height: 24),
               ],
@@ -110,38 +138,148 @@ class DeviceMonitoringScreen extends StatelessWidget {
   }
 
   // --------------------------------------------------
-  // DEMO MODE BANNER
+  // MODE SELECTOR
   // --------------------------------------------------
 
-  Widget _demoBanner() {
+  Widget _modeSelector(
+    BuildContext context,
+    WidgetRef ref,
+    bool simulationMode,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Operating Mode',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: AppColors.textPrimary,
+            ),
+          ),
+
+          const SizedBox(height: 5),
+
+          const Text(
+            'Choose the source of sensor readings.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+          ),
+
+          const SizedBox(height: 14),
+
+          Row(
+            children: [
+              Expanded(
+                child: _modeButton(
+                  label: 'Simulator',
+                  icon: Icons.science_outlined,
+                  selected: simulationMode,
+                  onPressed: () {
+                    DeviceService.instance.setSimulationMode(true);
+
+                    ref.read(sensorDataModeProvider.notifier).useSimulator();
+                  },
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              Expanded(
+                child: _modeButton(
+                  label: 'Real Hardware',
+                  icon: Icons.watch_outlined,
+                  selected: !simulationMode,
+                  onPressed: () {
+                    DeviceService.instance.setSimulationMode(false);
+
+                    ref.read(sensorDataModeProvider.notifier).useHardware();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _modeButton({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onPressed,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Text(label, textAlign: TextAlign.center),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: selected ? Colors.white : AppColors.primary,
+        backgroundColor: selected ? AppColors.primary : Colors.transparent,
+        side: BorderSide(color: AppColors.primary),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 13),
+      ),
+    );
+  }
+
+  // --------------------------------------------------
+  // MODE BANNER
+  // --------------------------------------------------
+
+  Widget _modeBanner(bool simulationMode) {
+    final color = simulationMode ? AppColors.warning : AppColors.primary;
+
+    final title = simulationMode
+        ? 'SIMULATOR MODE ACTIVE'
+        : 'HARDWARE MODE SELECTED';
+
+    final message = simulationMode
+        ? 'Sensor readings and connection status are simulated. '
+              'No physical wearable is required.'
+        : 'The app is listening for live ESP32 telemetry through '
+              'Firebase Realtime Database.';
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.science_outlined, color: AppColors.warning),
-          SizedBox(width: 10),
+          Icon(
+            simulationMode ? Icons.science_outlined : Icons.memory,
+            color: color,
+          ),
+
+          const SizedBox(width: 10),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'DEMO MODE ACTIVE',
-                  style: TextStyle(
+                  title,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 4),
+
+                const SizedBox(height: 4),
+
                 Text(
-                  'The information on this screen is simulated. '
-                  'No physical AlertXBand device is currently connected.',
-                  style: TextStyle(
+                  message,
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
@@ -158,7 +296,17 @@ class DeviceMonitoringScreen extends StatelessWidget {
   // DEVICE INFORMATION CARD
   // --------------------------------------------------
 
-  Widget _deviceCard(DeviceService device) {
+  Widget _deviceCard(DeviceService device, bool simulationMode) {
+    final status = simulationMode
+        ? device.isConnected
+              ? 'DEMO ONLINE'
+              : 'DEMO OFFLINE'
+        : device.isConnected
+        ? 'HARDWARE ONLINE'
+        : 'HARDWARE OFFLINE';
+
+    final battery = device.reportedBatteryPercentage;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -190,7 +338,7 @@ class DeviceMonitoringScreen extends StatelessWidget {
               const Spacer(),
 
               _statusPill(
-                device.isConnected ? 'DEMO ONLINE' : 'DEMO OFFLINE',
+                status,
                 device.isConnected ? AppColors.success : AppColors.danger,
               ),
             ],
@@ -210,7 +358,7 @@ class DeviceMonitoringScreen extends StatelessWidget {
           const SizedBox(height: 5),
 
           Text(
-            'Device ID: AXB-DEMO-001',
+            'Device ID: ${device.deviceId}',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.8),
               fontSize: 13,
@@ -222,9 +370,13 @@ class DeviceMonitoringScreen extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.battery_5_bar, color: Colors.white, size: 22),
+
               const SizedBox(width: 8),
+
               Text(
-                '${device.batteryPercentage}% simulated battery',
+                battery == null
+                    ? 'Battery: Waiting for telemetry'
+                    : 'Battery: $battery%',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -233,33 +385,39 @@ class DeviceMonitoringScreen extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 14),
+          if (simulationMode) ...[
+            const SizedBox(height: 14),
 
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: device.toggleDemoConnection,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white70),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              icon: Icon(device.isConnected ? Icons.link_off : Icons.link),
-              label: Text(
-                device.isConnected ? 'Simulate Disconnect' : 'Simulate Connect',
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: device.toggleDemoConnection,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white70),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                icon: Icon(device.isConnected ? Icons.link_off : Icons.link),
+                label: Text(
+                  device.isConnected
+                      ? 'Simulate Disconnect'
+                      : 'Simulate Connect',
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
   // --------------------------------------------------
-  // DEVICE OVERVIEW GRID
+  // DEVICE OVERVIEW
   // --------------------------------------------------
 
-  Widget _overviewGrid(DeviceService device) {
+  Widget _overviewGrid(DeviceService device, bool simulationMode) {
+    final battery = device.reportedBatteryPercentage;
+
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -271,8 +429,8 @@ class DeviceMonitoringScreen extends StatelessWidget {
         _overviewCard(
           icon: Icons.battery_full,
           title: 'Battery',
-          value: '${device.batteryPercentage}%',
-          subtitle: 'Simulated',
+          value: battery == null ? '--' : '$battery%',
+          subtitle: simulationMode ? 'Simulated battery' : 'ESP32 telemetry',
           color: AppColors.success,
         ),
 
@@ -280,32 +438,34 @@ class DeviceMonitoringScreen extends StatelessWidget {
           icon: Icons.memory,
           title: 'Controller',
           value: device.isConnected ? 'Online' : 'Offline',
-          subtitle: 'ESP32 demo status',
+          subtitle: simulationMode ? 'ESP32 demo status' : 'Real ESP32 status',
           color: AppColors.primary,
         ),
 
         _overviewCard(
           icon: Icons.location_on,
           title: 'GPS',
-          value: device.isConnected ? 'Available' : 'Offline',
-          subtitle: 'Demo status',
+          value: simulationMode
+              ? device.isConnected
+                    ? 'Available'
+                    : 'Offline'
+              : device.gpsStatus.contains('Available')
+              ? 'Available'
+              : 'Waiting',
+          subtitle: 'NEO-6M',
           color: AppColors.secondary,
         ),
 
         _overviewCard(
           icon: Icons.cell_tower,
-          title: 'GSM',
-          value: 'Not configured',
-          subtitle: 'SIM800L',
+          title: 'Communication',
+          value: device.connectionType.toUpperCase(),
+          subtitle: simulationMode ? 'Simulator' : 'Wi-Fi / GSM',
           color: AppColors.warning,
         ),
       ],
     );
   }
-
-  // --------------------------------------------------
-  // INDIVIDUAL OVERVIEW CARD
-  // --------------------------------------------------
 
   Widget _overviewCard({
     required IconData icon,
@@ -324,7 +484,6 @@ class DeviceMonitoringScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 21),
 
@@ -423,10 +582,10 @@ class DeviceMonitoringScreen extends StatelessWidget {
   }
 
   // --------------------------------------------------
-  // MONITORING CONTROL PANEL
+  // MONITORING CONTROLS
   // --------------------------------------------------
 
-  Widget _controlPanel(DeviceService device) {
+  Widget _controlPanel(DeviceService device, bool simulationMode) {
     final canControl = device.isConnected && device.masterMonitoringEnabled;
 
     return Container(
@@ -488,16 +647,24 @@ class DeviceMonitoringScreen extends StatelessWidget {
               color: AppColors.warning.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, color: AppColors.warning, size: 18),
-                SizedBox(width: 8),
+                const Icon(
+                  Icons.info_outline,
+                  color: AppColors.warning,
+                  size: 18,
+                ),
+
+                const SizedBox(width: 8),
+
                 Expanded(
                   child: Text(
-                    'Demo controls only. Changes are not sent '
-                    'to the physical wearable.',
-                    style: TextStyle(
+                    simulationMode
+                        ? 'Simulator controls affect generated readings only.'
+                        : 'These controls currently change app-side settings. '
+                              'They are not yet sent to the physical ESP32.',
+                    style: const TextStyle(
                       fontSize: 11,
                       color: AppColors.textSecondary,
                     ),
@@ -572,7 +739,11 @@ class DeviceMonitoringScreen extends StatelessWidget {
   // DEVICE DIAGNOSTICS
   // --------------------------------------------------
 
-  Widget _diagnosticsCard(BuildContext context, DeviceService device) {
+  Widget _diagnosticsCard(
+    BuildContext context,
+    DeviceService device,
+    bool simulationMode,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -583,9 +754,14 @@ class DeviceMonitoringScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Check the simulated device modules.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          Text(
+            simulationMode
+                ? 'Check the simulated device modules.'
+                : 'Check the current hardware telemetry status.',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
 
           const SizedBox(height: 14),
@@ -602,7 +778,11 @@ class DeviceMonitoringScreen extends StatelessWidget {
                   context: context,
                   builder: (dialogContext) {
                     return AlertDialog(
-                      title: const Text('Demo Diagnostics'),
+                      title: Text(
+                        simulationMode
+                            ? 'Simulator Diagnostics'
+                            : 'Hardware Diagnostics',
+                      ),
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: results.map((result) {
@@ -641,7 +821,11 @@ class DeviceMonitoringScreen extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.health_and_safety_outlined),
-              label: const Text('Run Demo Diagnostics'),
+              label: Text(
+                simulationMode
+                    ? 'Run Simulator Diagnostics'
+                    : 'Run Hardware Diagnostics',
+              ),
             ),
           ),
         ],
@@ -650,10 +834,10 @@ class DeviceMonitoringScreen extends StatelessWidget {
   }
 
   // --------------------------------------------------
-  // LAST UPDATED INFORMATION
+  // LAST UPDATED
   // --------------------------------------------------
 
-  Widget _lastUpdatedCard(DeviceService device) {
+  Widget _lastUpdatedCard(DeviceService device, bool simulationMode) {
     return Row(
       children: [
         const Icon(Icons.update, size: 17, color: AppColors.textSecondary),
@@ -662,7 +846,8 @@ class DeviceMonitoringScreen extends StatelessWidget {
 
         Expanded(
           child: Text(
-            'Demo status updated: ${device.formattedLastUpdated}',
+            '${simulationMode ? 'Simulator' : 'Device'} status updated: '
+            '${device.formattedLastUpdated}',
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 11,
@@ -674,7 +859,7 @@ class DeviceMonitoringScreen extends StatelessWidget {
   }
 
   // --------------------------------------------------
-  // SECTION TITLE
+  // SHARED UI
   // --------------------------------------------------
 
   Widget _sectionTitle(String title) {
@@ -687,10 +872,6 @@ class DeviceMonitoringScreen extends StatelessWidget {
       ),
     );
   }
-
-  // --------------------------------------------------
-  // STATUS PILL
-  // --------------------------------------------------
 
   Widget _statusPill(String label, Color color) {
     return Container(

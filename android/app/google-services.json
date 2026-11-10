@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "133764873281",
+    "project_id": "alertxband",
+    "storage_bucket": "alertxband.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:133764873281:android:e91403c9e2b9b0a7c35ac0",
+        "android_client_info": {
+          "package_name": "com.alertxband.alertxband_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgasSk6hI1R3XF8p28Tx80vgGIOAGbkXs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

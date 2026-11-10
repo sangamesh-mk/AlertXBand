@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../services/database_service.dart';
+import '../../services/emergency_contacts_service.dart';
 
 class EmergencyContactsScreen extends StatefulWidget {
   const EmergencyContactsScreen({super.key});
@@ -12,7 +12,7 @@ class EmergencyContactsScreen extends StatefulWidget {
 }
 
 class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
-  final DatabaseService _database = DatabaseService.instance;
+  final EmergencyContactsService _database = EmergencyContactsService.instance;
 
   List<Map<String, dynamic>> _contacts = [];
   bool _loading = true;
@@ -281,6 +281,10 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
         },
       );
     } finally {
+      // Allow the dialog closing animation to finish
+      // before disposing its text controllers.
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+
       nameController.dispose();
       phoneController.dispose();
       relationshipController.dispose();

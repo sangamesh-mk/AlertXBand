@@ -14,6 +14,11 @@ import '../../features/support/faq_screen.dart';
 import '../../features/support/device_setup_screen.dart';
 import '../../features/support/troubleshooting_screen.dart';
 import '../../features/support/report_problem_screen.dart';
+import '../../features/settings/account_security_screen.dart';
+import '../../features/settings/privacy_policy_screen.dart';
+import '../../features/settings/terms_conditions_screen.dart';
+
+import '../../features/settings/app_permissions_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -51,13 +56,33 @@ class AppRouter {
       ),
 
       GoRoute(
+        path: '/terms-conditions',
+        builder: (context, state) => const TermsConditionsScreen(),
+      ),
+
+      GoRoute(
         path: '/troubleshooting',
         builder: (context, state) => const TroubleshootingScreen(),
       ),
 
       GoRoute(
+        path: '/app-permissions',
+        builder: (context, state) => const AppPermissionsScreen(),
+      ),
+
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
+      ),
+
+      GoRoute(
         path: '/device-monitoring',
         builder: (context, state) => const DeviceMonitoringScreen(),
+      ),
+
+      GoRoute(
+        path: '/account-security',
+        builder: (context, state) => const AccountSecurityScreen(),
       ),
 
       GoRoute(
