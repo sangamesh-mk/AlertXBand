@@ -1,26 +1,14 @@
 #pragma once
 
-// AlertXBand firmware configuration template.
-// Copy to a local config.h and fill in verified values.
-// Never commit real credentials.
+// Copy this file to config.h in the same folder as AlertXBand_V1.0.ino.
+// Fill in your own values. config.h is excluded from Git by .gitignore.
+// NEVER commit real credentials.
 
-#define WIFI_SSID "YOUR_WIFI_SSID"
-#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
-#define DEVICE_ID "AXB-DEVICE-001"
+#define AXB_WIFI_SSID "YOUR_WIFI_SSID"
+#define AXB_WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
 
-// ESP32 I2C pins used in the MPU6050 bench-test setup.
-// Verify against final assembled wiring.
-#define I2C_SDA_PIN 21
-#define I2C_SCL_PIN 22
-
-// GPS baud rate used during development tests.
-// Confirm UART pins from the actual wiring.
-#define GPS_BAUD_RATE 9600
-#define GPS_RX_PIN -1
-#define GPS_TX_PIN -1
-
-// Set these only after verifying the physical pin map.
-#define DHT_DATA_PIN -1
-#define MQ2_ADC_PIN -1
-#define BUZZER_PIN -1
-#define STATUS_LED_PIN -1
+#define AXB_FIREBASE_DATABASE_URL "https://YOUR_DATABASE.REGION.firebasedatabase.app"
+#define AXB_DEVICE_ID "device-001"
+#define AXB_FIREBASE_API_KEY "YOUR_FIREBASE_WEB_API_KEY"
+#define AXB_FIREBASE_DEVICE_EMAIL "YOUR_DEVICE_ACCOUNT_EMAIL"
+#define AXB_FIREBASE_DEVICE_PASSWORD "YOUR_DEVICE_ACCOUNT_PASSWORD"
