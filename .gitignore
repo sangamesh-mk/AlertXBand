@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# AlertXBand local firmware secrets
+firmware/**/config.h
+**/secrets.h
