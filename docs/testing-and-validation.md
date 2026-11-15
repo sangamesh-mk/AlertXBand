@@ -6,7 +6,7 @@ Use this document to record repeatable hardware, firmware, backend, and applicat
 
 | Date | Layer | Test | Expected result | Observed result | Status |
 |---|---|---|---|---|---|
-| YYYY-MM-DD | Hardware/Firmware/App | Describe test | Describe expected result | Record measured output | Pass/Fail/Blocked |
+| 2026-11-14 | Hardware/Firmware/App | The hardware woked well and the integration of both software and hardware also succeeded | Live location and speaker and mce also worked well with the fall detection | Varied data of the integrated sensors | All tests are passed |
 
 ## Validation areas
 
