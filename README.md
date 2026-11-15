@@ -1,472 +1,286 @@
 # 🚨 AlertXBand
-### AI-Powered Wearable Safety Monitoring & Emergency Alert System
+### Smart Wearable Safety Monitoring & Emergency Alert System
 
 <p align="center">
-  <strong>Wearable Technology · IoT · Health Monitoring · GPS Tracking · Emergency Response</strong>
+  <strong>Wearable IoT · Embedded Systems · Flutter · GPS · Firebase</strong>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Flutter-02569B?logo=flutter&logoColor=white" alt="Flutter">
   <img src="https://img.shields.io/badge/Language-Dart-0175C2?logo=dart&logoColor=white" alt="Dart">
-  <img src="https://img.shields.io/badge/Backend-In%20Development-orange" alt="Backend">
-  <img src="https://img.shields.io/badge/Hardware-ESP32%20%7C%20ESP8266-green" alt="Hardware">
-  <img src="https://img.shields.io/badge/Project-Prototype-blueviolet" alt="Prototype">
-  <img src="https://img.shields.io/badge/License-To%20Be%20Decided-lightgrey" alt="License">
+  <img src="https://img.shields.io/badge/Firmware-ESP32-green?logo=espressif&logoColor=white" alt="ESP32">
+  <img src="https://img.shields.io/badge/Cloud-Firebase-FFCA28?logo=firebase&logoColor=black" alt="Firebase">
+  <img src="https://img.shields.io/badge/Stage-Working%20Prototype-blueviolet" alt="Working prototype">
 </p>
 
 ---
 
-## 📌 1. Overview
+## Overview
 
-**AlertXBand** is an IoT-based wearable safety monitoring system designed to support personal safety, health monitoring, location tracking and emergency response through a connected wearable device and mobile application.
+**AlertXBand** is a wearable Internet of Things (IoT) safety monitoring project that combines an ESP32-based device, sensor-based event detection, GPS, cloud connectivity and a Flutter application.
 
-The project aims to combine embedded systems, wireless communication, GPS technology, sensor monitoring and mobile application development into a unified safety platform.
+The project is intended to help monitor selected environmental and motion conditions, share device information with a connected application, and support emergency-alert workflows.
 
-The wearable is designed to collect relevant sensor information, identify potential safety events and communicate alerts to a connected mobile application and designated emergency contacts.
+AlertXBand is being developed as an integrated hardware-and-software prototype. The repository contains the Flutter application, ESP32 firmware, hardware notes and project documentation.
 
-The project is being developed in stages, beginning with the Flutter mobile application, followed by backend development and physical hardware integration.
+> **Project vision:** Bring wearable sensing, location awareness and connected emergency communication together in one accessible platform.
 
-> **Our vision:** Make personal safety monitoring more accessible through intelligent wearable technology and connected emergency response systems.
+## Problem
 
----
+During an emergency, a person may not be able to reach a phone or manually communicate their situation and location. A wearable device can help by collecting sensor readings, identifying configured events and communicating relevant information to a connected system.
 
-## 🎯 2. Problem Statement
-
-People may encounter emergency situations where they are unable to communicate their location or request assistance quickly.
-
-Traditional emergency communication methods can depend on the user being physically capable of accessing a phone and manually contacting someone.
-
-AlertXBand aims to address these challenges through:
-
-- Wearable-based safety monitoring.
-- Automated detection of potential emergency events.
-- Location tracking and sharing.
-- Emergency SOS functionality.
-- Health-related sensor monitoring.
-- Mobile notifications and emergency contact management.
-
----
-
-## 💡 3. Proposed Solution
-
-AlertXBand consists of three primary components:
-
-| Component | Responsibility |
-|---|---|
-| Wearable Hardware | Collects sensor data and detects configured events. |
-| Backend Infrastructure | Processes, stores and distributes device information and alerts. |
-| Flutter Mobile Application | Provides monitoring, configuration, location and notification interfaces. |
-
-The intended workflow is:
-
-1. The wearable collects sensor readings.
-2. The device processes sensor information.
-3. Relevant events are identified by configured detection logic.
-4. The wearable communicates information through an available network.
-5. The backend receives and processes the information.
-6. The mobile application displays readings, status and alerts.
-7. Emergency workflows can notify designated contacts when configured and successfully connected.
-
----
-
-## ✨ 4. Key Features
-
-### 📱 Mobile Application
-
-- User registration and login interface.
-- Home dashboard.
-- Personal information management.
-- Wearable device monitoring.
-- Sensor monitoring dashboard.
-- Emergency contacts management.
-- SOS emergency interface.
-- GPS tracking interface.
-- Health monitoring interface.
-- Notification centre.
-- Emergency and alert history.
-- Device setup guide.
-- Frequently asked questions.
-- Troubleshooting guide.
-- Problem reporting interface.
-- Settings and account management.
-
-### 🛡️ Safety & Emergency Monitoring
-
-Planned capabilities include:
-
-- Emergency SOS activation.
-- Fall detection using motion sensors.
-- Emergency event processing.
-- Location sharing.
-- Device connectivity monitoring.
-- Emergency contact notification.
-- Alert history and event tracking.
-
-### ❤️ Health Monitoring
-
-The hardware design may support:
-
-- Heart-rate monitoring.
-- Temperature monitoring.
-- Humidity monitoring.
-- Motion and activity monitoring.
-- Additional sensor-based measurements depending on the hardware configuration.
-
-### 📍 Location Tracking
-
-The proposed GPS functionality includes:
-
+AlertXBand explores this approach through:
+- Continuous acquisition of supported sensor readings.
+- Motion-based fall-event detection logic.
 - GPS coordinate acquisition.
-- Location updates.
-- Device location display.
-- Emergency location sharing.
-- Location history, subject to implementation.
+- Local status indications using a display, LEDs and buzzer.
+- Wi-Fi connectivity and cloud data transmission.
+- A mobile application for monitoring device information.
 
----
+## System at a glance
 
-## 🏗️ 5. System Architecture
+AlertXBand is organized into three main parts:
 
-The planned architecture consists of the wearable, backend and mobile application.
+| Layer | Role |
+|---|---|
+| Wearable device | ESP32, sensors, GPS and local indicators acquire and process device data. |
+| Cloud connectivity | Firebase Realtime Database is used by the integrated firmware to transmit device information. |
+| Flutter application | Provides the user-facing interface for device monitoring, location, emergency features and account-related screens. |
+
+### Data flow
 
 ```mermaid
-flowchart TD
-    A["AlertXBand Wearable"] --> B["ESP32 / ESP8266"]
-    B --> C["Sensor Data Processing"]
-    C --> D["Wi-Fi / GSM Communication"]
-    D --> E["Backend Infrastructure"]
-    E --> F["Authentication"]
-    E --> G["Database"]
-    E --> H["Emergency Event Processing"]
-    E --> I["Notification Services"]
-    F --> J["Flutter Mobile Application"]
-    G --> J
-    H --> J
-    I --> J
-    J --> K["Dashboard"]
-    J --> L["GPS Tracking"]
-    J --> M["Health Monitoring"]
-    J --> N["Emergency Alerts"]
+flowchart LR
+    A["Sensors and GPS"] --> B["ESP32 Firmware"]
+    B --> C["Sensor Processing and Event Logic"]
+    C --> D["Local LCD / LEDs / Buzzer"]
+    C --> E["Wi-Fi"]
+    E --> F["Firebase Realtime Database"]
+    F --> G["Flutter Application"]
+    G --> H["Monitoring Dashboard"]
+    G --> I["Location and Emergency UI"]
 ```
 
-**Architecture note:** This represents the intended system architecture. Backend services and complete hardware-to-application communication are still under development.
+The diagram represents the current Wi-Fi/Firebase data path in the integrated firmware. GSM/SIM800L communication and complete end-to-end emergency delivery should be treated as separate integration work unless verified in the current build.
 
----
+## Key capabilities
 
-## 🧰 6. Technology Stack
+### Embedded firmware — integrated V1.0
 
-### Mobile Application
+The integrated ESP32 sketch in `firmware/integrated-v1/` includes:
 
-| Technology | Purpose |
+- MPU6050 raw-register motion acquisition.
+- Free-fall and impact-based fall-event logic.
+- NEO-6M GPS data parsing.
+- DHT22 temperature and humidity acquisition.
+- MQ-2 gas sensor ADC acquisition.
+- Buzzer and red/yellow/green status LED control.
+- GPS status LED and 16×2 I2C LCD output.
+- Wi-Fi connectivity.
+- Firebase Email/Password authentication and token refresh.
+- Firebase Realtime Database REST data upload.
+
+### Flutter application
+
+The Flutter application includes screens and flows for:
+
+- Authentication and onboarding.
+- Home dashboard and device monitoring.
+- Health monitoring interface.
+- GPS tracking interface.
+- Emergency alerts and emergency contacts.
+- Notifications.
+- Profile, settings and support.
+
+Some screens or indicators may still use demonstration/simulated data or have integration work remaining. Refer to the current implementation and testing notes before treating an interface as a verified live feature.
+
+## Hardware
+
+The integrated V1.0 firmware currently supports the following connected modules:
+
+| Component | Purpose |
 |---|---|
-| Flutter | Cross-platform application development |
-| Dart | Application programming language |
-| Material Design | User interface components |
-| Riverpod | State management |
-| GoRouter | Application navigation |
-
-### Embedded Hardware
-
-| Component | Intended purpose |
-|---|---|
-| ESP32 / ESP8266 | Main microcontroller |
-| MPU6050 | Accelerometer and gyroscope |
-| NEO-6M GPS | Location acquisition |
-| SIM800L GSM | Cellular communication |
+| ESP32 | Main controller |
+| MPU6050 / compatible IMU | Acceleration and gyroscope readings |
+| NEO-6M GPS | Position data |
 | DHT22 | Temperature and humidity |
-| MAX30102 / compatible pulse sensor | Heart-rate sensing |
-| MQ-2 | Gas sensing, where applicable |
-| OLED / LCD | Local device display |
-| Li-ion battery | Portable power supply |
+| MQ-2 | Gas sensor ADC reading |
+| 16×2 I2C LCD | Local information display |
+| Buzzer and LEDs | Local status and alert indication |
 
-*The final hardware configuration depends on component compatibility, power requirements and prototype validation.*
+Other modules, including a MAX30102-compatible pulse sensor and SIM800L GSM module, have been explored during development. Check the actual prototype and the relevant firmware before assuming they are part of the integrated V1.0 build.
 
-### Backend — Planned
+## Technology stack
 
-| Technology | Intended purpose |
+| Area | Technology |
 |---|---|
-| Firebase Authentication | User authentication |
-| Cloud Firestore | Application and device data |
-| Cloud Functions | Backend event processing |
-| Firebase Cloud Messaging | Push notifications |
-| Cloud Storage | File and profile image storage |
+| Mobile application | Flutter, Dart |
+| State management / navigation | Riverpod, GoRouter |
+| Embedded platform | ESP32, Arduino framework |
+| Sensor and GPS libraries | TinyGPSPlus, DHT sensor library, LiquidCrystal_I2C |
+| Cloud data | Firebase Realtime Database REST API |
+| Authentication for device upload | Firebase Email/Password |
+| Source control | Git and GitHub |
 
----
-
-## 📂 7. Project Structure
-
-The Flutter application follows a feature-oriented architecture.
+## Repository structure
 
 ```text
 AlertXBand/
-│
-├── android/
-├── windows/
-├── test/
-│
-├── lib/
-│   │
-│   ├── main.dart
-│   │
-│   ├── core/
-│   │   ├── router/
-│   │   └── theme/
-│   │
-│   ├── features/
-│   │   ├── admin/
-│   │   ├── authentication/
-│   │   ├── dashboard/
-│   │   ├── device_monitoring/
-│   │   ├── emergency_alerts/
-│   │   ├── emergency_contacts/
-│   │   ├── gps_tracking/
-│   │   ├── health_monitoring/
-│   │   ├── notifications/
-│   │   ├── onboarding/
-│   │   ├── profile/
-│   │   ├── settings/
-│   │   └── support/
-│   │
-│   ├── models/
-│   ├── providers/
-│   ├── services/
-│   └── widgets/
-│
+├── android/                    # Android application platform
+├── lib/                        # Flutter application source
+├── test/                       # Flutter tests
+├── web/                        # Flutter web platform
+├── windows/                    # Flutter Windows platform
+├── functions/                  # Firebase/backend functions
+├── firmware/
+│   ├── integrated-v1/
+│   │   ├── AlertXBand_V1.0.ino
+│   │   └── README.md
+│   ├── config.example.h
+│   └── docs/
+├── hardware/
+│   ├── components-list.md
+│   ├── circuit-connections.md
+│   ├── power-management.md
+│   └── hardware-testing.md
+├── docs/
+│   ├── system-architecture.md
+│   └── testing-and-validation.md
 ├── pubspec.yaml
-├── analysis_options.yaml
-├── .gitignore
 └── README.md
 ```
 
-*The structure is representative of the project organization and may evolve as development continues.*
+The tree highlights the main project areas; individual files and folders may evolve during development.
 
----
+## Getting started — Flutter application
 
-## ⚙️ 8. Getting Started
+### Requirements
 
-### Prerequisites
-
-Install the following tools:
-
-- Flutter SDK
-- Dart SDK
-- Android Studio or Android SDK
-- Visual Studio Code
+- Flutter SDK and Dart SDK
+- Android Studio / Android SDK or Visual Studio Code
 - Git
-- An Android device or emulator
+- Android emulator or compatible device
 
-### Step 1 — Clone the repository
+### Setup
 
-```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
-```
+1. Clone the repository:
 
-### Step 2 — Navigate to the project
+   ```bash
+   git clone https://github.com/sangamesh-mk/AlertXBand.git
+   ```
 
-```bash
-cd AlertXBand
-```
+2. Open the project directory:
 
-### Step 3 — Install dependencies
+   ```bash
+   cd AlertXBand
+   ```
 
-```bash
-flutter pub get
-```
+3. Install Flutter dependencies:
 
-### Step 4 — Verify Flutter configuration
+   ```bash
+   flutter pub get
+   ```
 
-```bash
-flutter doctor
-```
+4. Check the local Flutter environment:
 
-### Step 5 — Run the application
+   ```bash
+   flutter doctor
+   ```
 
-```bash
-flutter run
-```
+5. Run the application:
 
-### Step 6 — Analyze the project
+   ```bash
+   flutter run
+   ```
 
-```bash
-flutter analyze
-```
+Firebase configuration may be required for features that use connected Firebase services. Do not commit private configuration files or credentials.
 
----
+## Getting started — ESP32 firmware
 
-## 🔌 9. Hardware Integration Roadmap
+The integrated firmware and its setup instructions are maintained here:
 
-Hardware integration will be implemented after the mobile application and backend communication interfaces are established.
+- [Integrated V1.0 firmware](firmware/integrated-v1/AlertXBand_V1.0.ino)
+- [Firmware setup guide](firmware/integrated-v1/README.md)
+- [Example configuration](firmware/config.example.h)
 
-The proposed integration sequence:
+The sketch requires a local `config.h` containing your own Wi-Fi and Firebase values. Create it from the example configuration and keep it out of version control. Never publish Wi-Fi passwords, Firebase device-account passwords, API keys or access tokens.
 
-1. Microcontroller initialization.
-2. Sensor initialization and calibration.
-3. GPS communication and location validation.
-4. GSM or Wi-Fi communication.
-5. Device authentication.
-6. Secure device-to-backend communication.
-7. Sensor data transmission.
-8. Emergency event transmission.
-9. Mobile application synchronization.
-10. End-to-end testing.
+## Development status
 
-### Proposed Device Data Format
-
-An example of the intended device communication payload:
-
-```json
-{
-  "deviceId": "AXB-0001",
-  "timestamp": "2026-11-09T10:30:00Z",
-  "temperature": 32.1,
-  "humidity": 47.4,
-  "heartRate": 78,
-  "location": {
-    "latitude": 13.0827,
-    "longitude": 80.2707
-  },
-  "fallDetected": false,
-  "sosTriggered": false,
-  "deviceStatus": "online"
-}
-```
-
-This is an illustrative data contract, not a claim of live hardware transmission.
-
----
-
-## 📊 10. Development Status
-
-| Development Area | Status |
+| Area | Current status |
 |---|---|
-| Flutter project setup | Implemented |
-| Application navigation | In progress |
-| Authentication UI | Implemented as demo UI |
-| Home dashboard | Implemented |
-| Device monitoring UI | Implemented |
-| Emergency contacts UI | Implemented |
-| GPS tracking UI | Implemented |
-| Health monitoring UI | Implemented |
-| Notifications UI | Implemented with demo data |
-| Help & Support | In progress |
-| Account & Security | Pending |
-| Privacy Policy | Pending |
-| Terms & Conditions | Pending |
-| App Permissions | Pending |
-| Firebase backend | Planned |
-| Device-to-cloud integration | Planned |
-| Live hardware data | Pending validation |
-| End-to-end testing | Pending |
+| Flutter application structure and core screens | Implemented |
+| ESP32 integrated V1.0 sketch | Added to repository |
+| MPU6050, GPS, DHT22 and MQ-2 firmware acquisition | Implemented in V1.0 sketch |
+| Local LCD, buzzer and LED outputs | Implemented in V1.0 sketch |
+| Wi-Fi and Firebase RTDB upload in firmware | Implemented in V1.0 sketch |
+| Live sensor data in application | Hardware data has been observed in the application; continue validating individual fields and refresh behavior |
+| Live GPS display in application | Integration/validation remains |
+| Consistent live-data status across all screens | Requires further integration |
+| Event-driven alerts and notifications | Requires end-to-end validation |
+| GSM calling/SMS workflow | Not claimed as complete in integrated V1.0 |
+| Full emergency workflow reliability | Requires further validation |
 
-**Important:** Some interfaces currently use demonstration data or local in-memory state. Their presence does not mean the corresponding production service or physical hardware integration is complete.
+This status table distinguishes code present in the repository from features that still need complete application-level or end-to-end validation.
 
----
+## Documentation
 
-## 🗺️ 11. Future Development Roadmap
+- [System architecture](docs/system-architecture.md)
+- [Testing and validation](docs/testing-and-validation.md)
+- [Hardware documentation](hardware/README.md)
+- [Component list](hardware/components-list.md)
+- [Circuit connections](hardware/circuit-connections.md)
+- [Power management](hardware/power-management.md)
+- [Hardware testing notes](hardware/hardware-testing.md)
+- [Firmware documentation](firmware/README.md)
 
-### Phase 1 — Mobile Application
-- Complete all remaining screens.
-- Finalize navigation and application state.
-- Improve validation and error handling.
-- Complete UI and responsiveness testing.
+## Roadmap
 
-### Phase 2 — Backend Infrastructure
-- Firebase project configuration.
-- Authentication and user profiles.
-- Firestore database architecture.
-- Device registration.
-- Emergency contacts and alert management.
-- Secure communication interfaces.
+- Complete live GPS integration in the Flutter application.
+- Ensure all monitoring screens consistently distinguish live hardware data from simulated data.
+- Complete event-driven alert and notification workflows.
+- Validate sensor thresholds and fall-detection behavior under controlled test conditions.
+- Finalize hardware wiring diagrams and prototype documentation.
+- Validate network-loss behavior, power consumption and battery runtime.
+- Review Firebase access rules and transport security before deployment.
+- Prepare a tagged project release after end-to-end verification.
 
-### Phase 3 — Hardware Integration
-- ESP32 / ESP8266 firmware.
-- Sensor integration and calibration.
-- GPS tracking.
-- GSM / Wi-Fi connectivity.
-- Device authentication.
-- Live sensor data transmission.
+## Security and safety
 
-### Phase 4 — Intelligent Safety Workflows
-- Fall detection validation.
-- Emergency event processing.
-- Notification delivery.
-- Location sharing.
-- Connectivity monitoring.
+- Keep local `config.h`, passwords, API keys and tokens out of Git.
+- Restrict Firebase access using appropriate authentication and database rules.
+- The current firmware uses `WiFiClientSecure::setInsecure()` for initial testing. Proper TLS certificate validation is required before deployment.
+- Calibrate the MQ-2 threshold for the actual sensor and environment; its ADC threshold is not a gas concentration measurement.
+- Validate fall-detection thresholds and event timing against representative movements and false-positive/false-negative cases.
+- Review battery protection, charging, regulator sizing and wiring before extended operation.
 
-### Phase 5 — Testing and Deployment
-- Hardware and software integration testing.
-- Network failure testing.
-- Battery and power testing.
-- Security testing.
-- User acceptance testing.
-- Production deployment preparation.
+## Disclaimer
 
----
+AlertXBand is an engineering prototype and is **not a certified medical device or a guaranteed emergency response system**. Sensor readings, fall detection, GPS accuracy and notification delivery can be affected by hardware, environment, network coverage, power and software conditions.
 
-## 🔐 12. Security & Privacy
+Do not rely on this prototype as the sole means of emergency communication, medical monitoring or personal protection.
 
-Security is an important consideration for a wearable safety platform.
+## Contributing
 
-Planned security measures include:
-
-- Secure user authentication.
-- Device-level authentication.
-- Firestore security rules.
-- Restricted access to personal information.
-- Protected emergency contact information.
-- Secure transmission of device data.
-- Appropriate access controls for emergency information.
-
-Actual security guarantees will depend on implementation, configuration and testing.
-
----
-
-## ⚠️ 13. Prototype Disclaimer
-
-AlertXBand is an evolving prototype and development project.
-
-It is not a certified medical device or a validated emergency response system.
-
-Sensor measurements, fall detection, location tracking and emergency notifications must undergo appropriate hardware validation and reliability testing before real-world safety use.
-
-Users should not rely on this prototype as their sole means of emergency communication or medical monitoring.
-
----
-
-## 🤝 14. Contributions
-
-Contributions, suggestions and technical feedback are welcome.
-
-If you would like to contribute:
+Technical feedback and contributions are welcome.
 
 1. Fork the repository.
 2. Create a feature branch.
-3. Implement your changes.
-4. Test your implementation.
-5. Submit a pull request with a clear description.
+3. Make a focused change.
+4. Test the change and document relevant results.
+5. Open a pull request describing the implementation and validation.
 
----
-
-## 👨‍💻 15. Project Information
+## Project information
 
 | Field | Details |
 |---|---|
 | Project | AlertXBand |
-| Domain | IoT · Wearable Technology · Personal Safety |
-| Mobile Framework | Flutter |
-| Programming Language | Dart |
-| Hardware Platform | ESP32 / ESP8266 |
-| Development Stage | Prototype |
-| Repository | AlertXBand |
-
----
-
-## 🌟 16. Vision
-
-AlertXBand aims to bring wearable technology, connected monitoring and emergency response into one integrated platform.
-
-The long-term objective is to develop a reliable, accessible and extensible personal safety solution through continuous software development, hardware experimentation and real-world validation.
-
-**Building technology that helps people feel safer, connected and protected.**
+| Domain | Wearable IoT and personal safety |
+| Application | Flutter |
+| Firmware | ESP32 / Arduino |
+| Cloud data | Firebase Realtime Database |
+| Stage | Working prototype under development |
+| Repository | [sangamesh-mk/AlertXBand](https://github.com/sangamesh-mk/AlertXBand) |
 
 ---
 
