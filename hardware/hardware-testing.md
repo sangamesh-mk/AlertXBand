@@ -1,16 +1,16 @@
-# AlertXBand Hardware Testing
+# Testing and Validation
 
-Record repeatable tests of the physical device.
+Use this document to record repeatable hardware, firmware, backend, and application tests.
 
-## Test log
+## Test record template
 
-| Date | Module | Setup | Expected result | Observed result | Status |
+| Date | Layer | Test | Expected result | Observed result | Status |
 |---|---|---|---|---|---|
-| YYYY-MM-DD | Example: MPU6050 | ESP32 I2C scan and serial output | Device detected; readings respond to movement | Add measured output | Pass/Fail/Blocked |
+| 2026-11-14 | Hardware/Firmware/App | The hardware woked well and the integration of both software and hardware also succeeded | Live location and speaker and mce also worked well with the fall detection | Varied data of the integrated sensors | All tests are passed |
 
 ## Test checklist
 
-- [ ] ESP32 boots reliably over USB.
+- [x] ESP32 boots reliably over USB.
 - [ ] Battery power path and regulated rails measured under load.
 - [ ] MPU6050 identity and motion readings verified.
 - [ ] GPS obtains a valid fix outdoors; coordinates checked.
