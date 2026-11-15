@@ -1,34 +1,48 @@
 # AlertXBand V1.0 Integrated ESP32 Firmware
 
-The integrated sketch supplied for V1.0 has been reviewed and prepared with credentials separated into a local-only `config.h`.
+This directory contains the integrated V1.0 firmware sketch for the AlertXBand ESP32 prototype.
 
-## Firmware package
+## Files
 
-The sanitized sketch package is available in the current ChatGPT conversation as `AlertXBand_V1.0_Firmware_Package.zip`. Add its `AlertXBand_V1.0.ino` file to this directory when uploading the package to the repository.
+- `AlertXBand_V1.0.ino` — complete integrated firmware.
+- `../../config.example.h` — template for local Wi-Fi and Firebase configuration.
 
-## Configuration
+## Hardware covered by this firmware
 
-1. Copy `config.example.h` to `config.h` beside the sketch.
-2. Fill in Wi-Fi and Firebase values in the local `config.h`.
-3. Do not commit `config.h`; the repository `.gitignore` excludes it.
-4. Change the Firebase device-account password that was present in the original uploaded sketch.
+- ESP32 development board
+- MPU6050 — motion sensing and free-fall/impact event detection
+- NEO-6M — GPS parsing
+- DHT22 — temperature and humidity
+- MQ-2 — gas sensor ADC reading
+- Buzzer, red/yellow/green status LEDs, GPS LED
+- 16x2 I2C LCD
 
-## Libraries
+The sketch also connects to Wi-Fi and sends device data to Firebase Realtime Database using the REST API and Firebase Email/Password authentication.
 
-Install TinyGPSPlus, DHT sensor library, and LiquidCrystal_I2C. Wi-Fi, WiFiClientSecure, HTTPClient, Wire, and HardwareSerial are provided by the ESP32 Arduino core.
+## Setup
 
-## Implemented in the supplied V1.0 sketch
+1. Install the ESP32 board package in Arduino IDE.
+2. Install these Arduino libraries:
+   - TinyGPSPlus
+   - DHT sensor library
+   - LiquidCrystal_I2C
+3. Copy `firmware/config.example.h` to this directory and rename the copy to `config.h`.
+4. Edit the local `config.h` with your Wi-Fi and Firebase values.
+5. Open `AlertXBand_V1.0.ino` in Arduino IDE, select the correct ESP32 board and port, then compile and upload.
 
-- MPU6050 raw-register acquisition and free-fall/impact event logic.
-- NEO-6M GPS parsing.
-- DHT22 and MQ-2 acquisition.
-- Buzzer, status LEDs, GPS LED, and 16x2 I2C LCD.
-- Wi-Fi connectivity, Firebase Email/Password sign-in/token refresh, and Realtime Database REST upload.
+**Never commit `config.h` or share its credentials.** The repository ignore rules exclude files named `config.h` under `firmware/`.
 
-## Validation and safety notes
+## Before testing
 
-- The source uses `WiFiClientSecure::setInsecure()` for initial testing; certificate validation is required before real-world deployment.
-- MQ-2 threshold is an uncalibrated ADC threshold, not a gas concentration.
-- Fall detection requires validation against representative movements and false-positive cases.
-- Firebase database rules must restrict access to the intended device/user.
+- Confirm the wiring and GPIO assignments in the sketch match your physical prototype.
+- Confirm the Firebase Realtime Database URL and device account are correct.
+- Check Serial Monitor output during startup, GPS acquisition, sensor reads, authentication, and database uploads.
+- Test each sensor independently before relying on the integrated system.
+
+## Known limitations and validation required
+
+- The sketch uses `WiFiClientSecure::setInsecure()` for initial testing. Replace this with proper certificate validation before deployment.
+- `GAS_LIMIT` is an uncalibrated ADC threshold, not a measured gas concentration. Calibrate it for the sensor, environment, and required use case.
+- Fall-detection thresholds and timing require controlled testing with representative movements and false-positive/false-negative analysis.
+- Verify Firebase Security Rules restrict access to authorized users and the intended device.
 - This prototype is not a certified medical device and cannot guarantee emergency delivery.
