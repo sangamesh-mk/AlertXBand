@@ -233,7 +233,7 @@ This status table distinguishes code present in the repository from features tha
 - [Power management](hardware/power-management.md)
 - [Hardware testing notes](hardware/hardware-testing.md)
 - [Firmware documentation](firmware/README.md)
-
+- [Prototype photo gallery and demo video](docs/prototype-gallery.md)
 ## Roadmap
 
 - Complete live GPS integration in the Flutter application.
