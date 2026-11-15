@@ -234,6 +234,7 @@ This status table distinguishes code present in the repository from features tha
 - [Hardware testing notes](hardware/hardware-testing.md)
 - [Firmware documentation](firmware/README.md)
 - [Prototype photo gallery and demo video](docs/prototype-gallery.md)
+- [AlertXBand project presentation (PowerPoint)](presentation/AlertXBand-Project-Presentation.pptx)
 ## Roadmap
 
 - Complete live GPS integration in the Flutter application.
